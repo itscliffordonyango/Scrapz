@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block title %}Overview · Scrapz Research{% endblock %}
+{% block content %}
+<div class="page-heading">
+  <div><p class="eyebrow">RESEARCH WORKSPACE</p><h1>Overview</h1>
+    <p class="muted">Collect public-source material with traceable provenance.</p></div>
+</div>
+<section class="stat-grid">
+  <article class="stat-card"><span class="stat-label">Collected records</span><strong>{{ stats.total }}</strong></article>
+  <article class="stat-card"><span class="stat-label">Queued / running</span><strong>{{ stats.jobs.get('queued', 0) + stats.jobs.get('running', 0) }}</strong></article>
+  <article class="stat-card"><span class="stat-label">Completed jobs</span><strong>{{ stats.jobs.get('completed', 0) }}</strong></article>
+  <article class="stat-card"><span class="stat-label">Registered sources</span><strong>{{ sources|length }}</strong></article>
+</section>
+{% if user.role in ["admin", "analyst"] %}
+<section class="panel">
+  <div class="panel-heading"><div><p class="eyebrow">NEW COLLECTION</p><h2>Start a job</h2></div></div>
+  <form method="post" action="/jobs" class="collection-form">
+    <input type="hidden" name="csrf" value="{{ csrf_token }}">
+    <label>Search terms <span class="optional">optional · comma-separated OR terms</span>
+      <input name="query" placeholder="e.g. renewable energy, climate report" maxlength="200"></label>
+    <div class="form-row">
+      <label>Registered source
+        <select name="source_id"><option value="">Choose a source</option>
+          {% for source in sources %}<option value="{{ source.id }}">{{ source.name }} · {{ source.kind }}</option>{% endfor %}
+        </select>
+      </label>
+      <span class="or-label">OR</span>
+      <label>One public URL
+        <input type="url" name="target_url" placeholder="https://example.org/article">
+      </label>
+    </div>
+    <p class="hint">A URL is fetched only when its robots.txt allows it. Feed collection is limited to 30 entries per run.</p>
+    <button class="button button-primary" type="submit">Queue collection</button>
+  </form>
+</section>
+{% endif %}
+<section class="panel">
+  <div class="panel-heading"><div><p class="eyebrow">ACTIVITY</p><h2>Recent collection jobs</h2></div><a class="text-link" href="/records">Browse records →</a></div>
+  {% if jobs %}
+  <div class="table-wrap"><table>
+    <thead><tr><th>Job</th><th>Search</th><th>Source</th><th>Status</th><th>Results</th><th>Created</th></tr></thead>
+    <tbody>{% for job in jobs %}<tr>
+      <td>#{{ job.id }}</td><td>{{ job.query or "—" }}</td><td class="truncate">{{ job.source_name }}</td>
+      <td><span class="status status-{{ job.status }}">{{ job.status }}</span>{% if job.error %}<div class="error-text">{{ job.error }}</div>{% endif %}</td>
+      <td>{{ job.result_count }}</td><td>{{ job.created_at[:16].replace("T", " ") }}</td>
+    </tr>{% endfor %}</tbody>
+  </table></div>
+  {% else %}<div class="empty-state"><strong>No collection jobs yet</strong><p>Register a source or submit a public URL to get started.</p></div>{% endif %}
+</section>
+<p class="disclaimer">Extraction confidence describes metadata completeness—not whether a source's claims are true. Verify findings in their original context.</p>
+{% endblock %}

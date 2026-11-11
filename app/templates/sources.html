@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}Sources · Scrapz Research{% endblock %}
+{% block content %}
+<div class="page-heading"><div><p class="eyebrow">ADMINISTRATION</p><h1>Source registry</h1><p class="muted">Manage approved public pages and RSS/Atom feeds.</p></div></div>
+<section class="panel">
+  <div class="panel-heading"><div><p class="eyebrow">SOURCE REGISTRY</p><h2>Add a source</h2></div></div>
+  <form method="post" action="/sources" class="collection-form">
+    <input type="hidden" name="csrf" value="{{ csrf_token }}">
+    <div class="form-row">
+      <label>Display name<input name="name" required maxlength="120" placeholder="Public research feed"></label>
+      <label>Source URL<input type="url" name="url" required placeholder="https://example.org/feed.xml"></label>
+    </div>
+    <div class="form-row">
+      <label>Type<select name="kind"><option value="feed">RSS / Atom feed</option><option value="web">Single webpage</option></select></label>
+      <label>Default classification<select name="category">{% for category in categories %}<option value="{{ category }}">{{ category|title }}</option>{% endfor %}</select></label>
+    </div>
+    <button class="button button-primary" type="submit">Add source</button>
+  </form>
+</section>
+<section class="panel">
+  <div class="panel-heading"><div><p class="eyebrow">CONFIGURED SOURCES</p><h2>{{ sources|length }} source{{ "" if sources|length == 1 else "s" }}</h2></div></div>
+  {% if sources %}
+  <div class="table-wrap"><table><thead><tr><th>Name</th><th>URL</th><th>Type</th><th>Classification</th><th>Status</th><th></th></tr></thead>
+    <tbody>{% for source in sources %}<tr><td>{{ source.name }}</td><td class="truncate"><a href="{{ source.url }}" target="_blank" rel="noopener noreferrer">{{ source.url }}</a></td><td>{{ source.kind }}</td><td>{{ source.category }}</td><td>{{ "Enabled" if source.enabled else "Disabled" }}</td><td>
+      <form method="post" action="/sources/{{ source.id }}/toggle"><input type="hidden" name="csrf" value="{{ csrf_token }}"><button class="button button-quiet" type="submit">{{ "Disable" if source.enabled else "Enable" }}</button></form>
+    </td></tr>{% endfor %}</tbody>
+  </table></div>
+  {% else %}<div class="empty-state"><strong>No sources configured</strong><p>Add only sources intended for public, permitted collection.</p></div>{% endif %}
+</section>
+{% endblock %}

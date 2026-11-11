@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block title %}Records · Scrapz Research{% endblock %}
+{% block content %}
+<div class="page-heading"><div><p class="eyebrow">COLLECTION</p><h1>Records</h1><p class="muted">Every item retains its original source and collection context.</p></div>
+  <a class="button button-secondary" href="/export.csv?q={{ q|urlencode }}&category={{ selected_category|urlencode }}">Export CSV</a></div>
+<section class="panel">
+  <form method="get" action="/records" class="filter-form">
+    <label class="search-label">Search records<input name="q" value="{{ q }}" placeholder="Title, excerpt, or source URL"></label>
+    <label>Classification<select name="category"><option value="">All classifications</option>{% for category in categories %}<option value="{{ category }}" {% if category == selected_category %}selected{% endif %}>{{ category|title }}</option>{% endfor %}</select></label>
+    <button class="button button-secondary" type="submit">Filter</button>
+  </form>
+  {% if records %}
+  <div class="record-list">{% for record in records %}
+    <article class="record">
+      <div class="record-top"><span class="category">{{ record.category }}</span><span class="confidence">Extraction confidence {{ "%.0f"|format(record.extraction_confidence * 100) }}%</span></div>
+      <h2><a href="{{ record.canonical_url }}" target="_blank" rel="noopener noreferrer">{{ record.title }}</a></h2>
+      <p>{{ record.summary or "No excerpt was available." }}</p>
+      {% if record.entities %}<p class="entity-list">{% for entity in record.entities %}<span>{{ entity.text }} · {{ entity.label }}</span>{% endfor %}</p>{% endif %}
+      <div class="review-row"><span class="review-status review-{{ record.verification_status }}">{{ record.verification_status.replace("_", " ") }}</span>
+        {% if record.reviewed_at %}<span class="reviewer">by {{ record.reviewer or "deleted user" }} · {{ record.reviewed_at[:10] }}</span>{% endif %}
+        {% if user.role in ["admin", "analyst"] %}
+        <form method="post" action="/records/{{ record.id }}/review" class="review-form">
+          <input type="hidden" name="csrf" value="{{ csrf_token }}">
+          <select name="verification_status" aria-label="Review status for {{ record.title }}">
+            <option value="unreviewed" {% if record.verification_status == "unreviewed" %}selected{% endif %}>Unreviewed</option>
+            <option value="source_checked" {% if record.verification_status == "source_checked" %}selected{% endif %}>Source checked</option>
+            <option value="uncertain" {% if record.verification_status == "uncertain" %}selected{% endif %}>Uncertain</option>
+          </select>
+          <button class="button button-quiet" type="submit">Update</button>
+        </form>
+        {% endif %}
+      </div>
+      <div class="record-meta"><span>Source: <a href="{{ record.source_url }}" target="_blank" rel="noopener noreferrer">{{ record.source_url }}</a></span>
+        <span>Published {{ record.published_at[:10] if record.published_at else "date not found" }} · Collected {{ record.collected_at[:10] }}</span></div>
+    </article>
+  {% endfor %}</div>
+  {% else %}<div class="empty-state"><strong>No matching records</strong><p>Try a different filter or start a collection job.</p></div>{% endif %}
+</section>
+<p class="disclaimer">Extraction confidence is not a truth score. “Source checked” records were manually compared with their linked source; this is not a guarantee of factual truth.</p>
+{% endblock %}
