@@ -2,6 +2,8 @@
 
 Scrapz is a local, role-aware workspace for collecting and organizing public web material from explicit URLs and administrator-registered web pages or RSS/Atom feeds. It keeps source attribution, extraction confidence, timestamps, categories, and audit events with the resulting records.
 
+For a step-by-step guide from cloning the repository to your first collection, see [usage.md](./usage.md).
+
 ## Requirements and setup
 
 - Python 3.11 or newer
